@@ -14,9 +14,7 @@ from sklearn import metrics
 from sklearn.model_selection import train_test_split
 
 from sklearn.datasets import fetch_openml
-from sklearn.preprocessing import binarize
-import openml
-from sklearn import datasets
+from scipy.stats import wilcoxon, t
 
 #DATASET_PATH = 'datasets/Iris.csv'
 #FEATURES = 5
@@ -29,7 +27,7 @@ def get_values_and_labels(ds):
 def predictGenericUnivariateSelect(X, y, clf):
     features = GenericUnivariateSelect(chi2)
     features.fit_transform(X, y)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=27)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=27)
 
     fit_chi2 = clf.fit(X_train, y_train)
     y_pred = fit_chi2.predict(X_test)
@@ -50,7 +48,7 @@ def predictGenericUnivariateSelect(X, y, clf):
 def predictMutual(X, y, clf, k):
     features = SelectKBest(mutual_info_classif, k)
     features.fit_transform(X, y)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=27)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=27)
 
     fit_chi2 = clf.fit(X_train, y_train)
     y_pred = fit_chi2.predict(X_test)
@@ -71,7 +69,7 @@ def predictMutual(X, y, clf, k):
 def predictFCLassif(X, y, clf, k):
     features = SelectKBest(f_classif, k)
     features.fit_transform(X, y)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=27)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=27)
 
     fit_chi2 = clf.fit(X_train, y_train)
     y_pred = fit_chi2.predict(X_test)
@@ -92,7 +90,7 @@ def predictFCLassif(X, y, clf, k):
 def predictChi2(X, y, clf, k):
     features = SelectKBest(chi2, k)
     features.fit_transform(X, y)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=27)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=27)
 
     fit_chi2 = clf.fit(X_train, y_train)
     y_pred = fit_chi2.predict(X_test)
@@ -111,9 +109,9 @@ def predictChi2(X, y, clf, k):
 
 
 def predictRFE(X, y, clf):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=27)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=27)
 
-    rfe = RFE(clf, 4)
+    rfe = RFE(clf, 6)
     fit_RFE = rfe.fit(X_train, y_train)
     y_pred = fit_RFE.predict(X_test)
 
@@ -129,6 +127,22 @@ def predictRFE(X, y, clf):
 
     return np.mean(f1_scores), np.mean(precision_scores), np.mean(recall_scores)
 
+def predictNotFeatures(X, y, clf):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=27)
+    fitNot = clf.fit(X_train, y_train)
+    y_pred = fitNot.predict(X_test)
+
+    f1_scores = []
+    precision_scores = []
+    recall_scores = []
+    f1_score = metrics.f1_score(y_test, y_pred, average=None)
+    precision = metrics.precision_score(y_test, y_pred, average=None)
+    recall = metrics.recall_score(y_test, y_pred, average=None)
+    f1_scores.append(f1_score)
+    precision_scores.append(precision)
+    recall_scores.append(recall)
+
+    return np.mean(f1_scores), np.mean(precision_scores), np.mean(recall_scores)
 
 def main():
     svc = SVC()
@@ -146,9 +160,14 @@ def main():
     for i in datas:
         if (i=='hayes-roth' or i=='iris'):
             dataset = fetch_openml(name=i, version=1, cache=False)
+            X = 0
+            y = 0
+            X, y = get_values_and_labels(dataset)
         else:
             dataset = fetch_openml(name=i, version=2, cache=False)
-        X, y = get_values_and_labels(dataset)
+            X = 0
+            y = 0
+            X, y = get_values_and_labels(dataset)
         '''print(X.shape)
         print(y.shape)'''
         #X = dataset.data
@@ -156,15 +175,19 @@ def main():
         #print(X)
         #print(y)
 
-        resultRFE = [predictRFE(X, y, svc)]#, predictRFE(X, y, svc), predictRFE(X, y, tree)]
+        #resultRFE = [predictRFE(X, y, svc), predictRFE(X, y, svc), predictRFE(X, y, tree)]
         #resultChi2 = [predictChi2(X, y, svc, k), predictChi2(X, y, bayes, k), predictChi2(X, y, tree, k)]
         #resultFCLassif = [predictFCLassif(X, y, svc, k), predictFCLassif(X, y, bayes, k), predictFCLassif(X, y, tree, k)]
         #resultMutual = [predictMutual(X, y, svc, k), predictMutual(X, y, bayes, k), predictMutual(X, y, tree, k)]
         #resultGenericUnivariateSelect = [predictGenericUnivariateSelect(X, y, svc), predictGenericUnivariateSelect(X, y, bayes), predictGenericUnivariateSelect(X, y, tree)]
 
+        print(predictRFE(X, y, svc), predictNotFeatures(X, y , svc), predictChi2(X, y, svc, k))
+        #print(wilcoxon(predictChi2(X, y, svc, k), predictNotFeatures(X, y, svc), zero_method='zsplit'))
+        '''
+        for i in result:
+            print('{:2f}'.format(i[0]), '{:2f}'.format(i[1]), '{:2f}'.format(i[2]))
 
-        for i in resultRFE:
-            print('{:2f}'.format(i[0]))#, '{:2f}'.format(i[1]), '{:2f}'.format(i[2]))
+'''
 '''
         print('F1 Score: Precision: Recall: Chi2')
         for i in resultChi2:
