@@ -16,6 +16,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.datasets import fetch_openml
 from scipy.stats import wilcoxon, t
 
+import sys
 #DATASET_PATH = 'datasets/Iris.csv'
 #FEATURES = 5
 
@@ -148,63 +149,46 @@ def main():
     svc = SVC()
     bayes = GaussianNB()
     tree = DecisionTreeClassifier()
+
+    classifier = [svc, bayes, tree]
     k=2
     #dataset = pd.read_csv(DATASET_PATH, encoding='latin-1')
     #X, y = get_values_and_labels(dataset)
-    datas = ['analcatdata_michiganacc', 'analcatdata_seropositive',
-             'newton_hema', 'vinnie', 'disclosure_z', 'arsenic-female-bladder', 'arsenic-male-lung', 'arsenic-female-lung', 'arsenic-male-bladder',
-             'analcatdata_vineyard', 'rmftsa_sleepdata', 'chscase_geyser1', 'transplant',
-                'hayes-roth', 'iris', 'visualizing_environmental', 'chscase_funds', 'disclosure_z', 'disclosure_x_bias', 'wine'
-             ]
-    # visualizing_livestock, , , chscase_vine2 r analcatdata_neavote, balance-scale, analcatdata_challenger rmftsa_ctoarrivals
-    #fruitfly analcatdata_dmft analcatdata_neavote
+    datas = ['analcatdata_michiganacc', 'analcatdata_seropositive','arsenic-female-bladder', 'arsenic-male-lung', 'arsenic-female-lung', 'arsenic-male-bladder',
+             'analcatdata_vineyard', 'rmftsa_sleepdata', 'chscase_geyser1', 'transplant', 'hayes-roth', 'iris', 'visualizing_environmental', 'chscase_funds',
+             'disclosure_z', 'disclosure_x_bias', 'servo', 'newton_hema', 'vinnie', 'diggle_table_a1']
     for i in datas:
-        if (i=='hayes-roth' or i=='iris'):
+        if (i=='hayes-roth' or i=='iris' or i=='servo'):
             dataset = fetch_openml(name=i, version=1, cache=False)
-            X, y = get_values_and_labels(dataset)
         else:
             dataset = fetch_openml(name=i, version=2, cache=False)
-            X, y = get_values_and_labels(dataset)
-        '''print(X.shape)
-        print(y.shape)'''
+
+        X, y = get_values_and_labels(dataset)
+
         #X = dataset.data
         #y = dataset.target
         #print(X)
         #print(y)
 
-        #resultRFE = [predictRFE(X, y, svc), predictRFE(X, y, svc), predictRFE(X, y, tree)]
-        #resultChi2 = [predictChi2(X, y, svc, k), predictChi2(X, y, bayes, k), predictChi2(X, y, tree, k)]
-        #resultFCLassif = [predictFCLassif(X, y, svc, k), predictFCLassif(X, y, bayes, k), predictFCLassif(X, y, tree, k)]
-        #resultMutual = [predictMutual(X, y, svc, k), predictMutual(X, y, bayes, k), predictMutual(X, y, tree, k)]
-        #resultGenericUnivariateSelect = [predictGenericUnivariateSelect(X, y, svc), predictGenericUnivariateSelect(X, y, bayes), predictGenericUnivariateSelect(X, y, tree)]
+        resultSVC =[predictNotFeatures(X, y , svc), predictChi2(X, y, svc, k),  predictFCLassif(X, y, svc, k), predictGenericUnivariateSelect(X,y, svc), predictMutual(X,y , svc, k), predictRFE(X,y, svc)]
+        resultBayes = [predictNotFeatures(X, y , bayes), predictChi2(X, y, bayes, k),  predictFCLassif(X, y, bayes, k), predictGenericUnivariateSelect(X,y, bayes), predictMutual(X,y , bayes, k), predictRFE(X,y, bayes)]
+        resultTree = [predictNotFeatures(X, y , tree), predictChi2(X, y, tree, k),  predictFCLassif(X, y, tree, k), predictGenericUnivariateSelect(X,y, tree), predictMutual(X,y , tree, k), predictRFE(X,y, tree)]
 
-        print(predictNotFeatures(X, y , svc), predictChi2(X, y, svc, k),  predictFCLassif(X, y, svc, k))
-        #print(wilcoxon(predictChi2(X, y, svc, k), predictNotFeatures(X, y, svc), zero_method='zsplit'))
-        '''
-        for i in result:
-            print('{:2f}'.format(i[0]), '{:2f}'.format(i[1]), '{:2f}'.format(i[2]))
+        '''for i in resultSVC:
+            print('{:2f}'.format(i[0]), '{:2f}'.format(i[1]), '{:2f}'.format(i[2]), end=' ')
+        print()
 
+
+        for i in resultBayes:
+            print('{:2f}'.format(i[0]), '{:2f}'.format(i[1]), '{:2f}'.format(i[2]), end=' ')
+        print()
+
+        for i in resultTree:
+            print('{:2f}'.format(i[0]), '{:2f}'.format(i[1]), '{:2f}'.format(i[2]), end=' ')
+        print()
+        
+        
 '''
-'''
-        print('F1 Score: Precision: Recall: Chi2')
-        for i in resultChi2:
-            print('{:2f}'.format(i[0]), '{:2f}'.format(i[1]), '{:2f}'.format(i[2]))
-
-        print('F1 Score: Precision: Recall: F_classif')
-        for i in resultFCLassif:
-            print('{:2f}'.format(i[0]), '{:2f}'.format(i[1]), '{:2f}'.format(i[2]))
-
-        print('F1 Score: Precision: Recall: Mutual')
-        for i in resultMutual:
-            print('{:2f}'.format(i[0]), '{:2f}'.format(i[1]), '{:2f}'.format(i[2]))
-
-        print('F1 Score: Precision: Recall: Generic')
-        for i in resultGenericUnivariateSelect:
-            print('{:2f}'.format(i[0]), '{:2f}'.format(i[1]), '{:2f}'.format(i[2]))
-'''
-        #el = [FEATURES]
-        #el.extend(resultRFE)
-        #print('{},{},{},{}'.format(*el))
 
 if __name__ == '__main__':
     main()
